@@ -1,0 +1,1306 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Rack It Up – 8-Ball Pool Tracker</title>
+<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&family=Roboto+Mono:wght@400;700&display=swap" rel="stylesheet" />
+<style>
+  /* ── RESET & BASE ── */
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --blue:       #1A73E8;
+    --blue-dark:  #1557B0;
+    --blue-light: #E8F0FE;
+    --surface:    #FFFFFF;
+    --bg:         #F8F9FA;
+    --gray-1:     #F1F3F4;
+    --gray-2:     #E0E0E0;
+    --gray-3:     #9AA0A6;
+    --text-main:  #202124;
+    --text-sub:   #5F6368;
+    --green-felt: #1B5E20;
+    --green-mid:  #2E7D32;
+    --red:        #D93025;
+    --gold:       #F9AB00;
+    --shadow-sm:  0 1px 3px rgba(0,0,0,.12), 0 1px 2px rgba(0,0,0,.08);
+    --shadow-md:  0 4px 12px rgba(0,0,0,.10), 0 2px 6px rgba(0,0,0,.06);
+    --shadow-lg:  0 8px 24px rgba(0,0,0,.14), 0 4px 8px rgba(0,0,0,.08);
+    --radius-sm:  8px;
+    --radius-md:  12px;
+    --radius-lg:  16px;
+    --radius-xl:  24px;
+    --transition: 0.18s ease;
+  }
+
+  html, body {
+    height: 100%;
+    background: var(--bg);
+    font-family: 'Roboto', Arial, sans-serif;
+    color: var(--text-main);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* ── SCROLLBAR ── */
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-track { background: var(--bg); }
+  ::-webkit-scrollbar-thumb { background: var(--gray-2); border-radius: 3px; }
+
+  /* ────────────────────────────────────────────
+     SETUP SCREEN
+  ──────────────────────────────────────────── */
+  #setup-screen {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 24px 16px 48px;
+  }
+
+  .setup-logo {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-bottom: 36px;
+  }
+
+  .setup-logo .ball-icon {
+    width: 64px;
+    height: 64px;
+    background: var(--green-felt);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: var(--shadow-md);
+    margin-bottom: 14px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .setup-logo .ball-icon::after {
+    content: '8';
+    color: #fff;
+    font-size: 26px;
+    font-weight: 700;
+    font-family: 'Roboto', sans-serif;
+    position: relative;
+    z-index: 1;
+  }
+
+  .setup-logo h1 {
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--text-main);
+    letter-spacing: -0.5px;
+  }
+
+  .setup-logo p {
+    font-size: 14px;
+    color: var(--text-sub);
+    font-weight: 400;
+    margin-top: 4px;
+    letter-spacing: 0.2px;
+  }
+
+  .setup-card {
+    background: var(--surface);
+    border-radius: var(--radius-xl);
+    box-shadow: var(--shadow-md);
+    padding: 32px 28px 28px;
+    width: 100%;
+    max-width: 420px;
+  }
+
+  .setup-section-label {
+    font-size: 11px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    color: var(--text-sub);
+    margin-bottom: 10px;
+  }
+
+  .setup-field-group {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-bottom: 24px;
+  }
+
+  .text-input-wrap {
+    position: relative;
+  }
+
+  .text-input-wrap label {
+    position: absolute;
+    left: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 14px;
+    color: var(--text-sub);
+    pointer-events: none;
+    transition: var(--transition);
+    background: var(--surface);
+    padding: 0 4px;
+  }
+
+  .text-input-wrap input {
+    width: 100%;
+    padding: 14px 14px 10px;
+    border: 1.5px solid var(--gray-2);
+    border-radius: var(--radius-sm);
+    font-size: 15px;
+    font-family: 'Roboto', sans-serif;
+    color: var(--text-main);
+    background: transparent;
+    outline: none;
+    transition: border-color var(--transition), box-shadow var(--transition);
+  }
+
+  .text-input-wrap input:focus {
+    border-color: var(--blue);
+    box-shadow: 0 0 0 3px rgba(26,115,232,.12);
+  }
+
+  .text-input-wrap input:focus + label,
+  .text-input-wrap input:not(:placeholder-shown) + label {
+    top: 0;
+    font-size: 11px;
+    color: var(--blue);
+    font-weight: 500;
+  }
+
+  .text-input-wrap input::placeholder { color: transparent; }
+
+  .race-options {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+    margin-bottom: 28px;
+  }
+
+  .race-btn {
+    padding: 10px 6px;
+    border: 1.5px solid var(--gray-2);
+    border-radius: var(--radius-sm);
+    background: var(--surface);
+    color: var(--text-sub);
+    font-size: 14px;
+    font-weight: 500;
+    font-family: 'Roboto', sans-serif;
+    cursor: pointer;
+    text-align: center;
+    transition: all var(--transition);
+    user-select: none;
+  }
+
+  .race-btn:hover { border-color: var(--blue); color: var(--blue); background: var(--blue-light); }
+
+  .race-btn.active {
+    border-color: var(--blue);
+    background: var(--blue-light);
+    color: var(--blue);
+    font-weight: 700;
+    box-shadow: 0 0 0 3px rgba(26,115,232,.12);
+  }
+
+  .race-btn span {
+    display: block;
+    font-size: 19px;
+    font-weight: 700;
+    line-height: 1.2;
+  }
+
+  .btn-primary {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    width: 100%;
+    padding: 15px;
+    background: var(--blue);
+    color: #fff;
+    border: none;
+    border-radius: var(--radius-sm);
+    font-size: 15px;
+    font-weight: 500;
+    font-family: 'Roboto', sans-serif;
+    cursor: pointer;
+    letter-spacing: 0.3px;
+    transition: background var(--transition), box-shadow var(--transition), transform 0.1s;
+    box-shadow: 0 2px 6px rgba(26,115,232,.35);
+  }
+
+  .btn-primary:hover { background: var(--blue-dark); box-shadow: 0 4px 12px rgba(26,115,232,.4); }
+  .btn-primary:active { transform: scale(0.985); }
+
+  /* ────────────────────────────────────────────
+     MATCH SCREEN
+  ──────────────────────────────────────────── */
+  #match-screen {
+    display: none;
+    flex-direction: column;
+    min-height: 100vh;
+    padding: 16px;
+    gap: 14px;
+    max-width: 900px;
+    margin: 0 auto;
+  }
+
+  /* ── TOP BAR ── */
+  .top-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 0 4px;
+  }
+
+  .top-bar-title {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .top-bar-ball {
+    width: 32px;
+    height: 32px;
+    background: var(--green-felt);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    font-weight: 700;
+    color: #fff;
+    box-shadow: var(--shadow-sm);
+  }
+
+  .top-bar-title h2 {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--text-main);
+  }
+
+  .btn-text {
+    background: none;
+    border: none;
+    color: var(--text-sub);
+    font-size: 13px;
+    font-weight: 500;
+    font-family: 'Roboto', sans-serif;
+    cursor: pointer;
+    padding: 6px 12px;
+    border-radius: var(--radius-sm);
+    transition: background var(--transition), color var(--transition);
+    display: flex;
+    align-items: center;
+    gap: 5px;
+  }
+
+  .btn-text:hover { background: var(--gray-1); color: var(--text-main); }
+
+  /* ── TIMER CARD ── */
+  .timer-card {
+    background: var(--surface);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-sm);
+    padding: 16px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+
+  .timer-display-wrap {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .timer-label {
+    font-size: 10px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--text-sub);
+    margin-bottom: 2px;
+  }
+
+  .timer-display {
+    font-family: 'Roboto Mono', monospace;
+    font-size: 32px;
+    font-weight: 700;
+    color: var(--text-main);
+    letter-spacing: 2px;
+    line-height: 1;
+  }
+
+  .timer-display.running { color: var(--green-mid); }
+  .timer-display.paused  { color: var(--gold); }
+
+  .timer-controls {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+
+  .btn-timer {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 9px 18px;
+    border: 1.5px solid var(--gray-2);
+    border-radius: var(--radius-sm);
+    background: var(--surface);
+    color: var(--text-sub);
+    font-size: 13px;
+    font-weight: 500;
+    font-family: 'Roboto', sans-serif;
+    cursor: pointer;
+    transition: all var(--transition);
+    user-select: none;
+  }
+
+  .btn-timer:hover { background: var(--gray-1); border-color: #bbb; color: var(--text-main); }
+
+  .btn-timer.start  { border-color: var(--green-mid); color: var(--green-mid); }
+  .btn-timer.start:hover { background: #E8F5E9; }
+  .btn-timer.pause  { border-color: var(--gold); color: #B36C00; }
+  .btn-timer.pause:hover { background: #FFF8E1; }
+  .btn-timer.reset  { border-color: var(--gray-2); color: var(--text-sub); }
+
+  /* Race progress bar */
+  .race-info {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--text-sub);
+    white-space: nowrap;
+  }
+
+  /* ── PLAYER PANELS ── */
+  .players-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+  }
+
+  @media (max-width: 580px) {
+    .players-row { grid-template-columns: 1fr; }
+  }
+
+  .player-card {
+    background: var(--surface);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-sm);
+    overflow: hidden;
+    transition: box-shadow var(--transition);
+    border: 2px solid transparent;
+  }
+
+  .player-card.leading {
+    border-color: var(--blue);
+    box-shadow: var(--shadow-md);
+  }
+
+  /* Felt strip — the signature design element */
+  .felt-strip {
+    background: linear-gradient(135deg, var(--green-felt) 0%, var(--green-mid) 100%);
+    padding: 14px 18px 12px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .felt-strip::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: repeating-linear-gradient(
+      45deg,
+      rgba(255,255,255,.03) 0px,
+      rgba(255,255,255,.03) 1px,
+      transparent 1px,
+      transparent 8px
+    );
+  }
+
+  .player-name-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: relative;
+    z-index: 1;
+  }
+
+  .player-name {
+    font-size: 15px;
+    font-weight: 700;
+    color: rgba(255,255,255,.95);
+    letter-spacing: 0.2px;
+    max-width: 150px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .player-badge {
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.8px;
+    text-transform: uppercase;
+    padding: 3px 8px;
+    border-radius: 20px;
+    background: rgba(255,255,255,.18);
+    color: rgba(255,255,255,.9);
+  }
+
+  .player-badge.leader {
+    background: var(--gold);
+    color: #4A3000;
+  }
+
+  .score-section {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 8px;
+    position: relative;
+    z-index: 1;
+  }
+
+  .score-adjust-btn {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    border: none;
+    background: rgba(255,255,255,.15);
+    color: #fff;
+    font-size: 22px;
+    line-height: 1;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background var(--transition), transform 0.1s;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .score-adjust-btn:hover { background: rgba(255,255,255,.28); }
+  .score-adjust-btn:active { transform: scale(0.9); }
+
+  .score-display {
+    text-align: center;
+  }
+
+  .score-number {
+    font-size: 64px;
+    font-weight: 700;
+    color: #fff;
+    line-height: 1;
+    letter-spacing: -2px;
+    font-variant-numeric: tabular-nums;
+    text-shadow: 0 2px 8px rgba(0,0,0,.25);
+  }
+
+  .score-race {
+    font-size: 12px;
+    color: rgba(255,255,255,.65);
+    font-weight: 400;
+    margin-top: 1px;
+    letter-spacing: 0.3px;
+  }
+
+  /* Progress bar */
+  .score-progress-bar {
+    height: 3px;
+    background: rgba(255,255,255,.15);
+    margin-top: 10px;
+    border-radius: 2px;
+    position: relative;
+    z-index: 1;
+    overflow: hidden;
+  }
+
+  .score-progress-fill {
+    height: 100%;
+    background: rgba(255,255,255,.75);
+    border-radius: 2px;
+    transition: width 0.3s ease;
+  }
+
+  /* Stats section */
+  .stats-section {
+    padding: 16px 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .stat-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 12px;
+    background: var(--gray-1);
+    border-radius: var(--radius-sm);
+    gap: 8px;
+  }
+
+  .stat-label-group {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-width: 0;
+  }
+
+  .stat-name {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-main);
+    white-space: nowrap;
+  }
+
+  .stat-name-full {
+    font-size: 10px;
+    color: var(--text-sub);
+    font-weight: 400;
+    margin-top: 1px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .stat-counter {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .stat-btn {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    border: 1.5px solid var(--gray-2);
+    background: var(--surface);
+    color: var(--text-sub);
+    font-size: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all var(--transition);
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+    font-family: 'Roboto', sans-serif;
+    line-height: 1;
+  }
+
+  .stat-btn:hover { border-color: var(--blue); color: var(--blue); background: var(--blue-light); }
+  .stat-btn:active { transform: scale(0.88); }
+
+  .stat-value {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--text-main);
+    min-width: 22px;
+    text-align: center;
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* ── MATCH WINNER MODAL ── */
+  #winner-modal {
+    display: none;
+    position: fixed;
+    inset: 0;
+    z-index: 100;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    background: rgba(32,33,36,.55);
+    backdrop-filter: blur(6px);
+  }
+
+  #winner-modal.visible { display: flex; }
+
+  .modal-card {
+    background: var(--surface);
+    border-radius: var(--radius-xl);
+    box-shadow: var(--shadow-lg);
+    padding: 40px 32px 32px;
+    max-width: 380px;
+    width: 100%;
+    text-align: center;
+    animation: modal-pop .28s cubic-bezier(.34,1.56,.64,1) both;
+  }
+
+  @keyframes modal-pop {
+    from { transform: scale(0.85); opacity: 0; }
+    to   { transform: scale(1);    opacity: 1; }
+  }
+
+  .modal-trophy {
+    font-size: 56px;
+    line-height: 1;
+    margin-bottom: 16px;
+  }
+
+  .modal-title {
+    font-size: 13px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--text-sub);
+    margin-bottom: 6px;
+  }
+
+  .modal-winner-name {
+    font-size: 30px;
+    font-weight: 700;
+    color: var(--text-main);
+    margin-bottom: 4px;
+    word-break: break-word;
+  }
+
+  .modal-sub {
+    font-size: 14px;
+    color: var(--text-sub);
+    margin-bottom: 28px;
+  }
+
+  .modal-stats {
+    display: flex;
+    justify-content: center;
+    gap: 28px;
+    background: var(--gray-1);
+    border-radius: var(--radius-md);
+    padding: 14px 20px;
+    margin-bottom: 24px;
+  }
+
+  .modal-stat-item { text-align: center; }
+  .modal-stat-val  { font-size: 22px; font-weight: 700; color: var(--text-main); }
+  .modal-stat-lbl  { font-size: 10px; text-transform: uppercase; letter-spacing: 0.8px; color: var(--text-sub); font-weight: 500; margin-top: 2px; }
+
+  .modal-divider { width: 1px; background: var(--gray-2); }
+
+  .btn-modal-primary {
+    width: 100%;
+    padding: 14px;
+    background: var(--blue);
+    color: #fff;
+    border: none;
+    border-radius: var(--radius-sm);
+    font-size: 15px;
+    font-weight: 500;
+    font-family: 'Roboto', sans-serif;
+    cursor: pointer;
+    box-shadow: 0 2px 6px rgba(26,115,232,.35);
+    transition: background var(--transition);
+    margin-bottom: 10px;
+  }
+
+  .btn-modal-primary:hover { background: var(--blue-dark); }
+
+  .btn-modal-secondary {
+    width: 100%;
+    padding: 12px;
+    background: transparent;
+    color: var(--text-sub);
+    border: none;
+    border-radius: var(--radius-sm);
+    font-size: 14px;
+    font-weight: 500;
+    font-family: 'Roboto', sans-serif;
+    cursor: pointer;
+    transition: background var(--transition), color var(--transition);
+  }
+
+  .btn-modal-secondary:hover { background: var(--gray-1); color: var(--text-main); }
+
+  /* ── MATCH INFO FOOTER ── */
+  .match-footer {
+    background: var(--surface);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-sm);
+    padding: 12px 18px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    font-size: 12px;
+    color: var(--text-sub);
+    font-weight: 400;
+    flex-wrap: wrap;
+  }
+
+  .match-footer strong { color: var(--text-main); font-weight: 600; }
+
+  .dot { width: 3px; height: 3px; background: var(--gray-3); border-radius: 50%; display: inline-block; }
+
+  /* ── CONFETTI ── */
+  .confetti-piece {
+    position: fixed;
+    width: 10px;
+    height: 10px;
+    top: -10px;
+    border-radius: 2px;
+    animation: confetti-fall linear forwards;
+    pointer-events: none;
+    z-index: 200;
+  }
+
+  @keyframes confetti-fall {
+    0%   { transform: translateY(0) rotate(0deg); opacity: 1; }
+    90%  { opacity: 1; }
+    100% { transform: translateY(105vh) rotate(720deg); opacity: 0; }
+  }
+
+  /* ── UTILITY ── */
+  .hidden { display: none !important; }
+  .icon { font-size: 15px; }
+</style>
+</head>
+<body>
+
+<!-- ══════════════════════════════════════════
+     SETUP SCREEN
+══════════════════════════════════════════ -->
+<div id="setup-screen">
+  <div class="setup-logo">
+    <div class="ball-icon"></div>
+    <h1>Rack It Up</h1>
+    <p>8-Ball Pool Score Tracker</p>
+  </div>
+
+  <div class="setup-card">
+    <p class="setup-section-label">Player Names</p>
+    <div class="setup-field-group">
+      <div class="text-input-wrap">
+        <input type="text" id="p1-name" maxlength="20" placeholder="Player 1" autocomplete="off" />
+        <label for="p1-name">Player 1</label>
+      </div>
+      <div class="text-input-wrap">
+        <input type="text" id="p2-name" maxlength="20" placeholder="Player 2" autocomplete="off" />
+        <label for="p2-name">Player 2</label>
+      </div>
+    </div>
+
+    <p class="setup-section-label">Race To</p>
+    <div class="race-options">
+      <button class="race-btn active" data-val="5"><span>5</span>frames</button>
+      <button class="race-btn" data-val="10"><span>10</span>frames</button>
+      <button class="race-btn" data-val="15"><span>15</span>frames</button>
+      <button class="race-btn" data-val="21"><span>21</span>frames</button>
+    </div>
+
+    <button class="btn-primary" id="start-btn">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+      Start Match
+    </button>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     MATCH SCREEN
+══════════════════════════════════════════ -->
+<div id="match-screen">
+
+  <!-- Top bar -->
+  <div class="top-bar">
+    <div class="top-bar-title">
+      <div class="top-bar-ball">8</div>
+      <h2>Rack It Up</h2>
+    </div>
+    <button class="btn-text" id="new-match-btn">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M19 11H7.83l4.88-4.88c.39-.39.39-1.03 0-1.42-.39-.39-1.02-.39-1.41 0l-6.59 6.59c-.39.39-.39 1.02 0 1.41l6.59 6.59c.39.39 1.02.39 1.41 0 .39-.39.39-1.02 0-1.41L7.83 13H19c.55 0 1-.45 1-1s-.45-1-1-1z"/></svg>
+      New Match
+    </button>
+  </div>
+
+  <!-- Timer -->
+  <div class="timer-card">
+    <div class="timer-display-wrap">
+      <span class="timer-label">Match Duration</span>
+      <span class="timer-display" id="timer-display">00:00:00</span>
+    </div>
+    <div class="timer-controls">
+      <button class="btn-timer start" id="timer-start">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+        Start
+      </button>
+      <button class="btn-timer pause hidden" id="timer-pause">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>
+        Pause
+      </button>
+      <button class="btn-timer reset" id="timer-reset">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M12 5V1L7 6l5 5V7c3.31 0 6 2.69 6 6s-2.69 6-6 6-6-2.69-6-6H4c0 4.42 3.58 8 8 8s8-3.58 8-8-3.58-8-8-8z"/></svg>
+        Reset
+      </button>
+    </div>
+    <div class="race-info" id="race-info">Race to <strong id="race-label">5</strong></div>
+  </div>
+
+  <!-- Player panels -->
+  <div class="players-row">
+
+    <!-- Player 1 -->
+    <div class="player-card" id="card-p1">
+      <div class="felt-strip">
+        <div class="player-name-row">
+          <span class="player-name" id="display-p1-name">Player 1</span>
+          <span class="player-badge" id="badge-p1">P1</span>
+        </div>
+        <div class="score-section">
+          <button class="score-adjust-btn" data-player="1" data-action="minus" aria-label="Decrease score">−</button>
+          <div class="score-display">
+            <div class="score-number" id="score-p1">0</div>
+            <div class="score-race">of <span class="race-target">5</span></div>
+          </div>
+          <button class="score-adjust-btn" data-player="1" data-action="plus" aria-label="Increase score">+</button>
+        </div>
+        <div class="score-progress-bar">
+          <div class="score-progress-fill" id="progress-p1" style="width:0%"></div>
+        </div>
+      </div>
+      <div class="stats-section">
+        <div class="stat-row">
+          <div class="stat-label-group">
+            <span class="stat-name">🍎 Apple</span>
+            <span class="stat-name-full">Break &amp; Runs</span>
+          </div>
+          <div class="stat-counter">
+            <button class="stat-btn" data-player="1" data-stat="apple" data-action="minus">−</button>
+            <span class="stat-value" id="stat-p1-apple">0</span>
+            <button class="stat-btn" data-player="1" data-stat="apple" data-action="plus">+</button>
+          </div>
+        </div>
+        <div class="stat-row">
+          <div class="stat-label-group">
+            <span class="stat-name">C+ Clearance</span>
+            <span class="stat-name-full">Reverse Clearances</span>
+          </div>
+          <div class="stat-counter">
+            <button class="stat-btn" data-player="1" data-stat="clearance" data-action="minus">−</button>
+            <span class="stat-value" id="stat-p1-clearance">0</span>
+            <button class="stat-btn" data-player="1" data-stat="clearance" data-action="plus">+</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Player 2 -->
+    <div class="player-card" id="card-p2">
+      <div class="felt-strip">
+        <div class="player-name-row">
+          <span class="player-name" id="display-p2-name">Player 2</span>
+          <span class="player-badge" id="badge-p2">P2</span>
+        </div>
+        <div class="score-section">
+          <button class="score-adjust-btn" data-player="2" data-action="minus" aria-label="Decrease score">−</button>
+          <div class="score-display">
+            <div class="score-number" id="score-p2">0</div>
+            <div class="score-race">of <span class="race-target">5</span></div>
+          </div>
+          <button class="score-adjust-btn" data-player="2" data-action="plus" aria-label="Increase score">+</button>
+        </div>
+        <div class="score-progress-bar">
+          <div class="score-progress-fill" id="progress-p2" style="width:0%"></div>
+        </div>
+      </div>
+      <div class="stats-section">
+        <div class="stat-row">
+          <div class="stat-label-group">
+            <span class="stat-name">🍎 Apple</span>
+            <span class="stat-name-full">Break &amp; Runs</span>
+          </div>
+          <div class="stat-counter">
+            <button class="stat-btn" data-player="2" data-stat="apple" data-action="minus">−</button>
+            <span class="stat-value" id="stat-p2-apple">0</span>
+            <button class="stat-btn" data-player="2" data-stat="apple" data-action="plus">+</button>
+          </div>
+        </div>
+        <div class="stat-row">
+          <div class="stat-label-group">
+            <span class="stat-name">C+ Clearance</span>
+            <span class="stat-name-full">Reverse Clearances</span>
+          </div>
+          <div class="stat-counter">
+            <button class="stat-btn" data-player="2" data-stat="clearance" data-action="minus">−</button>
+            <span class="stat-value" id="stat-p2-clearance">0</span>
+            <button class="stat-btn" data-player="2" data-stat="clearance" data-action="plus">+</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- .players-row -->
+
+  <!-- Footer -->
+  <div class="match-footer" id="match-footer">
+    <strong id="footer-p1">Player 1</strong>
+    <span class="dot"></span>
+    <span>vs</span>
+    <span class="dot"></span>
+    <strong id="footer-p2">Player 2</strong>
+    <span class="dot"></span>
+    <span>Race to <strong id="footer-race">5</strong></span>
+  </div>
+
+</div><!-- #match-screen -->
+
+<!-- ══════════════════════════════════════════
+     WINNER MODAL
+══════════════════════════════════════════ -->
+<div id="winner-modal" role="dialog" aria-modal="true" aria-labelledby="modal-winner-name">
+  <div class="modal-card">
+    <div class="modal-trophy">🏆</div>
+    <p class="modal-title">Match Winner</p>
+    <h2 class="modal-winner-name" id="modal-winner-name">–</h2>
+    <p class="modal-sub" id="modal-sub">wins the match!</p>
+
+    <div class="modal-stats">
+      <div class="modal-stat-item">
+        <div class="modal-stat-val" id="modal-score-p1">0</div>
+        <div class="modal-stat-lbl" id="modal-lbl-p1">P1</div>
+      </div>
+      <div class="modal-divider"></div>
+      <div class="modal-stat-item">
+        <div class="modal-stat-val" id="modal-score-p2">0</div>
+        <div class="modal-stat-lbl" id="modal-lbl-p2">P2</div>
+      </div>
+      <div class="modal-divider"></div>
+      <div class="modal-stat-item">
+        <div class="modal-stat-val" id="modal-time">00:00</div>
+        <div class="modal-stat-lbl">Duration</div>
+      </div>
+    </div>
+
+    <button class="btn-modal-primary" id="modal-new-match">
+      🎱 New Match
+    </button>
+    <button class="btn-modal-secondary" id="modal-dismiss">
+      View Scoreboard
+    </button>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     JAVASCRIPT
+══════════════════════════════════════════ -->
+<script>
+(function () {
+  'use strict';
+
+  /* ── STATE ── */
+  const state = {
+    p1: { name: 'Player 1', score: 0, apple: 0, clearance: 0 },
+    p2: { name: 'Player 2', score: 0, apple: 0, clearance: 0 },
+    raceTo: 5,
+    timer: { seconds: 0, interval: null, running: false },
+    matchOver: false,
+  };
+
+  /* ── SETUP ELEMENTS ── */
+  const setupScreen  = document.getElementById('setup-screen');
+  const matchScreen  = document.getElementById('match-screen');
+  const p1Input      = document.getElementById('p1-name');
+  const p2Input      = document.getElementById('p2-name');
+  const startBtn     = document.getElementById('start-btn');
+  const raceBtns     = document.querySelectorAll('.race-btn');
+
+  /* ── MATCH ELEMENTS ── */
+  const timerDisplay = document.getElementById('timer-display');
+  const timerStart   = document.getElementById('timer-start');
+  const timerPause   = document.getElementById('timer-pause');
+  const timerReset   = document.getElementById('timer-reset');
+
+  const scoreEls     = { 1: document.getElementById('score-p1'), 2: document.getElementById('score-p2') };
+  const progressEls  = { 1: document.getElementById('progress-p1'), 2: document.getElementById('progress-p2') };
+  const nameEls      = { 1: document.getElementById('display-p1-name'), 2: document.getElementById('display-p2-name') };
+  const badgeEls     = { 1: document.getElementById('badge-p1'), 2: document.getElementById('badge-p2') };
+  const cardEls      = { 1: document.getElementById('card-p1'), 2: document.getElementById('card-p2') };
+  const statEls      = {
+    1: { apple: document.getElementById('stat-p1-apple'), clearance: document.getElementById('stat-p1-clearance') },
+    2: { apple: document.getElementById('stat-p2-apple'), clearance: document.getElementById('stat-p2-clearance') },
+  };
+
+  const raceTargets  = document.querySelectorAll('.race-target');
+  const raceLabel    = document.getElementById('race-label');
+  const newMatchBtn  = document.getElementById('new-match-btn');
+
+  /* ── MODAL ELEMENTS ── */
+  const winnerModal     = document.getElementById('winner-modal');
+  const modalWinnerName = document.getElementById('modal-winner-name');
+  const modalSub        = document.getElementById('modal-sub');
+  const modalScoreP1    = document.getElementById('modal-score-p1');
+  const modalScoreP2    = document.getElementById('modal-score-p2');
+  const modalLblP1      = document.getElementById('modal-lbl-p1');
+  const modalLblP2      = document.getElementById('modal-lbl-p2');
+  const modalTime       = document.getElementById('modal-time');
+  const modalNewMatch   = document.getElementById('modal-new-match');
+  const modalDismiss    = document.getElementById('modal-dismiss');
+
+  /* ── FOOTER ── */
+  const footerP1   = document.getElementById('footer-p1');
+  const footerP2   = document.getElementById('footer-p2');
+  const footerRace = document.getElementById('footer-race');
+
+  /* ════════════════════════════════════════
+     SETUP LOGIC
+  ════════════════════════════════════════ */
+  let selectedRace = 5;
+
+  raceBtns.forEach(btn => {
+    btn.addEventListener('click', () => {
+      raceBtns.forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      selectedRace = parseInt(btn.dataset.val, 10);
+    });
+  });
+
+  startBtn.addEventListener('click', () => {
+    const name1 = p1Input.value.trim() || 'Player 1';
+    const name2 = p2Input.value.trim() || 'Player 2';
+
+    state.p1.name = name1;
+    state.p2.name = name2;
+    state.raceTo  = selectedRace;
+
+    resetMatchState();
+    renderMatch();
+    setupScreen.style.display = 'none';
+    matchScreen.style.display = 'flex';
+    matchScreen.style.flexDirection = 'column';
+  });
+
+  /* ════════════════════════════════════════
+     TIMER
+  ════════════════════════════════════════ */
+  function formatTime(s) {
+    const h = Math.floor(s / 3600);
+    const m = Math.floor((s % 3600) / 60);
+    const sec = s % 60;
+    return [h, m, sec].map(v => String(v).padStart(2, '0')).join(':');
+  }
+
+  function tickTimer() {
+    state.timer.seconds++;
+    timerDisplay.textContent = formatTime(state.timer.seconds);
+  }
+
+  function startTimer() {
+    if (state.timer.running || state.matchOver) return;
+    state.timer.interval = setInterval(tickTimer, 1000);
+    state.timer.running  = true;
+    timerDisplay.classList.remove('paused');
+    timerDisplay.classList.add('running');
+    timerStart.classList.add('hidden');
+    timerPause.classList.remove('hidden');
+  }
+
+  function pauseTimer() {
+    clearInterval(state.timer.interval);
+    state.timer.running = false;
+    timerDisplay.classList.remove('running');
+    timerDisplay.classList.add('paused');
+    timerStart.classList.remove('hidden');
+    timerPause.classList.add('hidden');
+  }
+
+  function resetTimer() {
+    pauseTimer();
+    state.timer.seconds = 0;
+    timerDisplay.textContent = '00:00:00';
+    timerDisplay.classList.remove('running', 'paused');
+  }
+
+  timerStart.addEventListener('click', startTimer);
+  timerPause.addEventListener('click', pauseTimer);
+  timerReset.addEventListener('click', resetTimer);
+
+  /* ════════════════════════════════════════
+     SCORE & STAT BUTTONS
+  ════════════════════════════════════════ */
+  document.addEventListener('click', e => {
+    const scoreBtn = e.target.closest('.score-adjust-btn');
+    if (scoreBtn) {
+      const p = scoreBtn.dataset.player;
+      const action = scoreBtn.dataset.action;
+      adjustScore(p, action);
+      return;
+    }
+
+    const statBtn = e.target.closest('.stat-btn');
+    if (statBtn) {
+      const p    = statBtn.dataset.player;
+      const stat = statBtn.dataset.stat;
+      const act  = statBtn.dataset.action;
+      adjustStat(p, stat, act);
+      return;
+    }
+  });
+
+  function adjustScore(p, action) {
+    if (state.matchOver) return;
+    const key   = p === '1' ? 'p1' : 'p2';
+    const player = state[key];
+
+    if (action === 'plus')  player.score = Math.min(player.score + 1, state.raceTo);
+    if (action === 'minus') player.score = Math.max(player.score - 1, 0);
+
+    updateScoreDisplay(p);
+    updateLeaderBadges();
+    checkWinner();
+  }
+
+  function adjustStat(p, stat, action) {
+    if (state.matchOver) return;
+    const key    = p === '1' ? 'p1' : 'p2';
+    const player = state[key];
+    if (action === 'plus')  player[stat] = player[stat] + 1;
+    if (action === 'minus') player[stat] = Math.max(player[stat] - 1, 0);
+    statEls[p][stat].textContent = player[stat];
+  }
+
+  /* ════════════════════════════════════════
+     RENDER
+  ════════════════════════════════════════ */
+  function renderMatch() {
+    /* Names */
+    nameEls[1].textContent = state.p1.name;
+    nameEls[2].textContent = state.p2.name;
+    footerP1.textContent   = state.p1.name;
+    footerP2.textContent   = state.p2.name;
+    footerRace.textContent = state.raceTo;
+    raceLabel.textContent  = state.raceTo;
+    raceTargets.forEach(el => el.textContent = state.raceTo);
+
+    /* Scores */
+    updateScoreDisplay('1');
+    updateScoreDisplay('2');
+    updateLeaderBadges();
+
+    /* Stats */
+    statEls[1].apple.textContent      = state.p1.apple;
+    statEls[1].clearance.textContent  = state.p1.clearance;
+    statEls[2].apple.textContent      = state.p2.apple;
+    statEls[2].clearance.textContent  = state.p2.clearance;
+
+    /* Timer */
+    timerDisplay.textContent = '00:00:00';
+    timerDisplay.classList.remove('running', 'paused');
+    timerStart.classList.remove('hidden');
+    timerPause.classList.add('hidden');
+  }
+
+  function updateScoreDisplay(p) {
+    const key    = p === '1' ? 'p1' : 'p2';
+    const player = state[key];
+    scoreEls[p].textContent = player.score;
+    const pct = state.raceTo > 0 ? (player.score / state.raceTo) * 100 : 0;
+    progressEls[p].style.width = Math.min(pct, 100) + '%';
+  }
+
+  function updateLeaderBadges() {
+    const s1 = state.p1.score;
+    const s2 = state.p2.score;
+
+    badgeEls[1].textContent = 'P1';
+    badgeEls[2].textContent = 'P2';
+    badgeEls[1].classList.remove('leader');
+    badgeEls[2].classList.remove('leader');
+    cardEls[1].classList.remove('leading');
+    cardEls[2].classList.remove('leading');
+
+    if (s1 > s2)      { badgeEls[1].textContent = '🏅 Leading'; badgeEls[1].classList.add('leader'); cardEls[1].classList.add('leading'); }
+    else if (s2 > s1) { badgeEls[2].textContent = '🏅 Leading'; badgeEls[2].classList.add('leader'); cardEls[2].classList.add('leading'); }
+  }
+
+  /* ════════════════════════════════════════
+     WIN DETECTION
+  ════════════════════════════════════════ */
+  function checkWinner() {
+    if (state.p1.score >= state.raceTo) triggerWinner('p1');
+    else if (state.p2.score >= state.raceTo) triggerWinner('p2');
+  }
+
+  function triggerWinner(winnerKey) {
+    if (state.matchOver) return;
+    state.matchOver = true;
+    pauseTimer();
+
+    const winner = state[winnerKey];
+    const loser  = winnerKey === 'p1' ? state.p2 : state.p1;
+
+    modalWinnerName.textContent = winner.name;
+    modalSub.textContent = `wins the match ${winner.score}–${loser.score}!`;
+    modalScoreP1.textContent = state.p1.score;
+    modalScoreP2.textContent = state.p2.score;
+    modalLblP1.textContent   = state.p1.name;
+    modalLblP2.textContent   = state.p2.name;
+    modalTime.textContent    = formatTime(state.timer.seconds).slice(3); /* MM:SS */
+
+    winnerModal.classList.add('visible');
+    launchConfetti();
+  }
+
+  /* ════════════════════════════════════════
+     CONFETTI
+  ════════════════════════════════════════ */
+  function launchConfetti() {
+    const colors = ['#1A73E8', '#34A853', '#FBBC04', '#EA4335', '#9C27B0', '#00BCD4'];
+    for (let i = 0; i < 70; i++) {
+      setTimeout(() => {
+        const el = document.createElement('div');
+        el.className = 'confetti-piece';
+        el.style.left   = Math.random() * 100 + 'vw';
+        el.style.background = colors[Math.floor(Math.random() * colors.length)];
+        el.style.animationDuration = (1.8 + Math.random() * 2) + 's';
+        el.style.animationDelay    = '0s';
+        el.style.borderRadius      = Math.random() > 0.5 ? '50%' : '2px';
+        el.style.width  = (6 + Math.random() * 8) + 'px';
+        el.style.height = (6 + Math.random() * 8) + 'px';
+        document.body.appendChild(el);
+        setTimeout(() => el.remove(), 5000);
+      }, i * 28);
+    }
+  }
+
+  /* ════════════════════════════════════════
+     RESET / NEW MATCH
+  ════════════════════════════════════════ */
+  function goToSetup() {
+    winnerModal.classList.remove('visible');
+    resetTimer();
+    matchScreen.style.display = 'none';
+    setupScreen.style.display = '';
+    p1Input.value = '';
+    p2Input.value = '';
+    raceBtns.forEach(b => b.classList.remove('active'));
+    raceBtns[0].classList.add('active');
+    selectedRace = 5;
+  }
+
+  function resetMatchState() {
+    state.p1.score     = 0; state.p1.apple = 0; state.p1.clearance = 0;
+    state.p2.score     = 0; state.p2.apple = 0; state.p2.clearance = 0;
+    state.timer.seconds = 0;
+    state.timer.running = false;
+    state.matchOver     = false;
+    clearInterval(state.timer.interval);
+  }
+
+  newMatchBtn.addEventListener('click', goToSetup);
+  modalNewMatch.addEventListener('click', goToSetup);
+  modalDismiss.addEventListener('click', () => winnerModal.classList.remove('visible'));
+
+})();
+</script>
+</body>
+</html>
